@@ -9,6 +9,7 @@ from io import BytesIO
 import cv2
 import numpy as np
 from PIL import Image
+import pandas as pd
 
 # =========================================================
 # DONATELLO CONTROL CENTER V2
@@ -196,6 +197,83 @@ def agregar_producto(data):
     conn.commit()
 
 
+def codigo_existe(codigo):
+    c.execute("SELECT COUNT(*) FROM productos WHERE UPPER(codigo)=UPPER(?)", (str(codigo).strip(),))
+    return c.fetchone()[0] > 0
+
+
+def importar_productos_csv(df):
+    """Importa productos desde CSV exportado de la base local."""
+    importados = 0
+    omitidos = 0
+
+    for _, row in df.iterrows():
+        try:
+            codigo = str(row.get("codigo", "")).strip()
+            if not codigo or codigo.lower() == "nan":
+                codigo = generar_codigo_producto()
+
+            if codigo_existe(codigo):
+                omitidos += 1
+                continue
+
+            nombre = str(row.get("nombre", "")).strip()
+            if not nombre or nombre.lower() == "nan":
+                omitidos += 1
+                continue
+
+            categoria = str(row.get("categoria", "")).strip()
+            proveedor = str(row.get("proveedor", "")).strip()
+            moneda = str(row.get("moneda", "MXN")).strip()
+            if moneda not in ["MXN", "USD"]:
+                moneda = "MXN"
+
+            costo_base = float(row.get("costo_base", 0) or 0)
+            tipo_cambio = float(row.get("tipo_cambio", 17) or 17)
+            comision_pct = float(row.get("comision_pct", 0) or 0)
+            impuestos_pct = float(row.get("impuestos_pct", 0) or 0)
+            flete_unitario = float(row.get("flete_unitario", 0) or 0)
+
+            costo_real = row.get("costo_real", None)
+            if pd.isna(costo_real) or costo_real == "":
+                costo_real = calcular_costo_real(moneda, costo_base, tipo_cambio, comision_pct, impuestos_pct, flete_unitario)
+            else:
+                costo_real = float(costo_real)
+
+            precio_venta = float(row.get("precio_venta", 0) or 0)
+            margen_pct = row.get("margen_pct", None)
+            if pd.isna(margen_pct) or margen_pct == "":
+                margen_pct = calcular_margen(precio_venta, costo_real)
+            else:
+                margen_pct = float(margen_pct)
+
+            stock = int(float(row.get("stock", 0) or 0))
+            stock_minimo = int(float(row.get("stock_minimo", 1) or 1))
+
+            imagen_local = ""  # En Streamlit Cloud no sirve la ruta local de tu PC
+            imagen_url = str(row.get("imagen_url", "")).strip()
+            if imagen_url.lower() == "nan":
+                imagen_url = ""
+
+            fecha_alta = str(row.get("fecha_alta", datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            if fecha_alta.lower() == "nan":
+                fecha_alta = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            data = (
+                codigo, nombre, categoria, proveedor, moneda,
+                costo_base, tipo_cambio, comision_pct, impuestos_pct,
+                flete_unitario, costo_real, precio_venta, margen_pct,
+                stock, stock_minimo, imagen_local, imagen_url, fecha_alta
+            )
+
+            agregar_producto(data)
+            importados += 1
+        except Exception:
+            omitidos += 1
+
+    return importados, omitidos
+
+
 def obtener_productos():
     c.execute('''SELECT id, codigo, nombre, categoria, proveedor, moneda, costo_base,
                         tipo_cambio, comision_pct, impuestos_pct, flete_unitario,
@@ -349,7 +427,7 @@ st.caption("Inventario visual con imagen, costo real, margen y ventas básicas")
 
 menu = st.sidebar.selectbox(
     "Menú",
-    ["Agregar producto", "Inventario visual", "Etiquetas QR", "Ajustar inventario", "Registrar venta", "Dashboard"]
+    ["Agregar producto", "Inventario visual", "Importar CSV", "Etiquetas QR", "Ajustar inventario", "Registrar venta", "Dashboard"]
 )
 
 # =========================
@@ -588,6 +666,32 @@ elif menu == "Inventario visual":
                         if st.button("Eliminar producto", key=f"eliminar_{p[0]}"):
                             st.session_state[confirmar_key] = True
                             st.rerun()
+
+# =========================
+# IMPORTAR CSV
+# =========================
+
+elif menu == "Importar CSV":
+    st.header("Importar productos desde CSV")
+    st.caption("Usa este módulo para cargar productos exportados desde tu base local.")
+
+    archivo_csv = st.file_uploader("Sube productos_exportados.csv", type=["csv"])
+
+    if archivo_csv is not None:
+        try:
+            df = pd.read_csv(archivo_csv)
+            st.success("CSV leído correctamente.")
+            st.write(f"Productos detectados en archivo: {len(df)}")
+            st.dataframe(df.head(10), use_container_width=True)
+
+            st.warning("Las imágenes locales de tu computadora no se migran a Streamlit Cloud. Se conservarán solo las URLs de imagen si existen.")
+
+            if st.button("Importar productos", type="primary"):
+                importados, omitidos = importar_productos_csv(df)
+                st.success(f"Importación finalizada. Importados: {importados} | Omitidos: {omitidos}")
+                st.info("Los omitidos normalmente son productos duplicados por código o registros incompletos.")
+        except Exception as e:
+            st.error(f"No pude leer el CSV: {e}")
 
 # =========================
 # ETIQUETAS QR
