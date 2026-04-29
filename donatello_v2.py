@@ -468,121 +468,202 @@ st.markdown(
             --don-orange: #fc4a1a;
             --don-gold: #f7b733;
             --don-dark: #1f1f1f;
+            --don-brown: #4b2f14;
             --don-green: #6b8e23;
             --don-cream: #fff7e8;
+            --don-card: #fffdf8;
+            --don-border: #ead6ad;
+            --don-text: #24180d;
+            --don-muted: #6d604d;
         }
-        html, body, [class*="css"] {
-            background-color: var(--don-cream);
-        }
+
         .block-container {
-            padding-top: 0.7rem;
+            padding-top: 1rem;
             padding-left: 0.8rem;
             padding-right: 0.8rem;
             max-width: 1180px;
         }
-        h1, h2, h3 {
-            letter-spacing: -0.02em;
+
+        h1, h2, h3, label, p, span {
+            letter-spacing: -0.01em;
         }
+
         div[data-testid="stMetric"] {
-            background: #ffffff;
-            border: 1px solid #f1e3c5;
-            padding: 0.65rem;
-            border-radius: 16px;
-            box-shadow: 0 4px 14px rgba(60,35,10,0.06);
+            background: var(--don-card) !important;
+            border: 1px solid var(--don-border) !important;
+            padding: 0.65rem !important;
+            border-radius: 16px !important;
+            box-shadow: 0 4px 14px rgba(60,35,10,0.08) !important;
         }
+
+        div[data-testid="stMetric"] label,
+        div[data-testid="stMetric"] div {
+            color: var(--don-text) !important;
+        }
+
         .stButton > button {
-            border-radius: 16px;
-            padding: 0.62rem 0.9rem;
-            font-weight: 800;
-            border: 1px solid #efc46a;
-            background: #fffdf8;
+            border-radius: 16px !important;
+            padding: 0.62rem 0.9rem !important;
+            font-weight: 800 !important;
+            border: 1px solid var(--don-border) !important;
+            background: var(--don-card) !important;
+            color: var(--don-text) !important;
+            box-shadow: 0 2px 8px rgba(60,35,10,0.06) !important;
         }
+
         .stButton > button:hover {
-            border-color: var(--don-orange);
-            color: var(--don-orange);
+            border-color: var(--don-orange) !important;
+            color: var(--don-orange) !important;
+            background: #fff4dc !important;
         }
+
         .stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, var(--don-gold) 0%, var(--don-orange) 100%);
-            color: white;
-            border: none;
+            background: linear-gradient(135deg, var(--don-gold) 0%, var(--don-orange) 100%) !important;
+            color: #ffffff !important;
+            border: none !important;
         }
+
         div[data-testid="stContainer"] {
-            border-radius: 18px;
+            border-radius: 18px !important;
         }
-        .donatello-header {
-            background: linear-gradient(135deg, #251f17 0%, #5a3a16 50%, #f7b733 100%);
-            padding: 14px 16px;
+
+        .donatello-shell {
+            background: linear-gradient(135deg, #251f17 0%, #5a3a16 52%, #f7b733 100%);
+            padding: 12px 16px;
             border-radius: 22px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             color: white;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-height: 82px;
+            overflow: visible;
         }
+
+        .donatello-logo-box {
+            width: 62px;
+            min-width: 62px;
+            height: 62px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.16);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-size: 2rem;
+        }
+
+        .donatello-logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .donatello-title {
-            font-size: 1.35rem;
+            font-size: 1.45rem;
             font-weight: 900;
             margin: 0;
-            line-height: 1.05;
+            line-height: 1.1;
+            color: #ffffff !important;
         }
+
         .donatello-subtitle {
-            font-size: 0.82rem;
-            opacity: 0.92;
+            font-size: 0.86rem;
+            opacity: 0.95;
             margin-top: 4px;
+            color: #ffffff !important;
         }
+
         .quick-card {
-            background: #ffffff;
-            border: 1px solid #f0dfbc;
+            background: var(--don-card);
+            border: 1px solid var(--don-border);
             border-radius: 18px;
             padding: 12px;
             margin-bottom: 10px;
-            box-shadow: 0 4px 14px rgba(60,35,10,0.05);
+            box-shadow: 0 4px 14px rgba(60,35,10,0.06);
+            color: var(--don-text);
         }
+
         .quick-title {
             font-weight: 900;
             font-size: 1.05rem;
             margin-bottom: 4px;
+            color: var(--don-text);
         }
+
         .quick-muted {
-            color: #6d604d;
+            color: var(--don-muted);
             font-size: 0.85rem;
         }
-        div[role="radiogroup"] label {
-            background: #fffdf8;
-            border: 1px solid #ead6ad;
-            padding: 6px 10px;
-            border-radius: 14px;
-            margin-right: 4px;
+
+        div[role="radiogroup"] {
+            gap: 6px;
         }
+
+        div[role="radiogroup"] label {
+            background: var(--don-card) !important;
+            border: 1px solid var(--don-border) !important;
+            padding: 6px 10px !important;
+            border-radius: 14px !important;
+            margin-right: 4px !important;
+            color: var(--don-text) !important;
+            box-shadow: 0 2px 8px rgba(60,35,10,0.05);
+        }
+
+        div[role="radiogroup"] label p,
+        div[role="radiogroup"] label span {
+            color: var(--don-text) !important;
+            font-weight: 800 !important;
+        }
+
         input, textarea {
             border-radius: 14px !important;
         }
+
         @media (max-width: 768px) {
             .block-container {
                 padding-left: 0.45rem;
                 padding-right: 0.45rem;
                 padding-top: 0.45rem;
             }
-            .donatello-header {
-                padding: 12px;
+
+            .donatello-shell {
+                padding: 10px;
                 border-radius: 18px;
-                margin-bottom: 6px;
+                margin-bottom: 8px;
+                min-height: 70px;
+                gap: 10px;
             }
+
+            .donatello-logo-box {
+                width: 52px;
+                min-width: 52px;
+                height: 52px;
+                border-radius: 15px;
+            }
+
             .donatello-title {
                 font-size: 1.15rem;
             }
+
             .donatello-subtitle {
                 font-size: 0.75rem;
             }
+
             div[data-testid="column"] {
                 width: 100% !important;
                 flex: 1 1 100% !important;
             }
+
             .stButton > button {
-                width: 100%;
-                min-height: 44px;
-                font-size: 0.95rem;
+                width: 100% !important;
+                min-height: 44px !important;
+                font-size: 0.95rem !important;
             }
+
             div[data-testid="stMetric"] {
-                padding: 0.55rem;
+                padding: 0.55rem !important;
             }
         }
     </style>
@@ -596,22 +677,26 @@ for logo_path in LOGO_PATHS:
         logo_encontrado = logo_path
         break
 
-header_col1, header_col2 = st.columns([1, 5])
-with header_col1:
-    if logo_encontrado:
-        st.image(str(logo_encontrado), use_container_width=True)
-    else:
-        st.markdown("<div class='donatello-header' style='text-align:center; font-size:2rem;'>🛒</div>", unsafe_allow_html=True)
-with header_col2:
-    st.markdown(
-        """
-        <div class="donatello-header">
+if logo_encontrado:
+    import base64
+    with open(logo_encontrado, "rb") as f:
+        logo_b64 = base64.b64encode(f.read()).decode()
+    logo_html = f"<img src='data:image/png;base64,{logo_b64}' />"
+else:
+    logo_html = "🛒"
+
+st.markdown(
+    f"""
+    <div class="donatello-shell">
+        <div class="donatello-logo-box">{logo_html}</div>
+        <div>
             <p class="donatello-title">Ventas Donatello</p>
             <div class="donatello-subtitle">Inventario, ventas, QR y control de utilidad</div>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 menu = st.radio(
     "Navegación",
