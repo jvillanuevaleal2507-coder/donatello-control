@@ -1311,7 +1311,7 @@ elif menu == "Registrar venta":
                 with col_cam2:
                     if codigo_detectado:
                         st.success(f"Detectado: {codigo_detectado}")
-                    elif foto_qr is not None:
+                    elif foto_qr_subida is not None:
                         st.error("No pude leer el QR.")
 
                 if st.button("Agregar QR detectado", type="primary", disabled=not bool(codigo_detectado), key="btn_agregar_camara"):
