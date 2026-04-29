@@ -177,15 +177,41 @@ def generar_qr_bytes(codigo):
 
 
 def leer_qr_desde_imagen(archivo_imagen):
+    """Lee QR desde imagen subida/tomada. Intenta varias mejoras para hacerlo más tolerante."""
     if archivo_imagen is None:
         return None
     try:
         imagen = Image.open(archivo_imagen).convert("RGB")
         imagen_np = np.array(imagen)
         detector = cv2.QRCodeDetector()
-        data, points, _ = detector.detectAndDecode(imagen_np)
-        if data:
-            return data.strip()
+
+        intentos = []
+
+        # 1) Imagen original RGB
+        intentos.append(imagen_np)
+
+        # 2) Imagen en escala de grises
+        gris = cv2.cvtColor(imagen_np, cv2.COLOR_RGB2GRAY)
+        intentos.append(gris)
+
+        # 3) Imagen ampliada 2x
+        alto, ancho = gris.shape[:2]
+        grande = cv2.resize(gris, (ancho * 2, alto * 2), interpolation=cv2.INTER_CUBIC)
+        intentos.append(grande)
+
+        # 4) Contraste adaptativo
+        contraste = cv2.equalizeHist(grande)
+        intentos.append(contraste)
+
+        # 5) Blanco y negro / threshold
+        _, binaria = cv2.threshold(contraste, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        intentos.append(binaria)
+
+        for img in intentos:
+            data, points, _ = detector.detectAndDecode(img)
+            if data:
+                return data.strip()
+
         return None
     except Exception:
         return None
@@ -1013,27 +1039,41 @@ elif menu == "Registrar venta":
                 st.markdown("### 📷 Tomar QR")
                 cantidad_codigo = st.number_input("Cantidad", min_value=1, step=1, value=1, key="cantidad_codigo_camara")
 
-                if QR_SCANNER_AVAILABLE:
-                    st.caption("Permite acceso a la cámara. En la mayoría de celulares usará la cámara trasera.")
-                    codigo_detectado = qrcode_scanner(key="lector_qr")
+                st.markdown("<div class='quick-card'><div class='quick-title'>Opción recomendada</div><div class='quick-muted'>Toca el botón, elige cámara trasera, toma la foto del QR y luego presiona Agregar QR detectado.</div></div>", unsafe_allow_html=True)
 
-                    if codigo_detectado:
-                        st.success(f"Código detectado: {codigo_detectado}")
-                        producto_codigo = obtener_producto_por_codigo(codigo_detectado)
+                foto_qr_subida = st.file_uploader(
+                    "Tomar/Subir foto del QR",
+                    type=["jpg", "jpeg", "png", "webp"],
+                    key="foto_qr_subida_venta"
+                )
+
+                codigo_detectado_respaldo = leer_qr_desde_imagen(foto_qr_subida)
+
+                if codigo_detectado_respaldo:
+                    st.success(f"Código detectado: {codigo_detectado_respaldo}")
+                    producto_preview = obtener_producto_por_codigo(codigo_detectado_respaldo)
+                    if producto_preview:
+                        st.info(f"Producto: {producto_preview[2]} | Precio: {formato_moneda(producto_preview[12])} | Stock: {producto_preview[14]}")
+                    if st.button("Agregar QR detectado", type="primary", key="btn_agregar_foto_qr"):
+                        producto_codigo = obtener_producto_por_codigo(codigo_detectado_respaldo)
                         agregar_producto_al_carrito(producto_codigo, cantidad_codigo)
-                else:
-                    st.error("El lector QR en vivo no está instalado. Agrega streamlit-qrcode-scanner a requirements.txt")
+                elif foto_qr_subida is not None:
+                    st.error("No pude leer el QR. Intenta tomar la foto más cerca, con buena luz y sin reflejos.")
 
-                with st.expander("Respaldo: subir/tomar foto del QR"):
-                    foto_qr_subida = st.file_uploader("Subir o tomar foto del QR", type=["jpg", "jpeg", "png", "webp"], key="foto_qr_subida_venta")
-                    codigo_detectado_respaldo = leer_qr_desde_imagen(foto_qr_subida)
-                    if codigo_detectado_respaldo:
-                        st.success(f"Detectado: {codigo_detectado_respaldo}")
-                        if st.button("Agregar QR detectado", type="primary", key="btn_agregar_foto_qr"):
-                            producto_codigo = obtener_producto_por_codigo(codigo_detectado_respaldo)
+                st.divider()
+                st.markdown("**Opción experimental: lector en vivo**")
+                st.caption("Si el recuadro aparece descentrado en tu celular, usa la opción recomendada de arriba.")
+
+                if QR_SCANNER_AVAILABLE:
+                    usar_scanner_en_vivo = st.toggle("Probar lector QR en vivo", value=False, key="toggle_scanner_vivo")
+                    if usar_scanner_en_vivo:
+                        codigo_detectado = qrcode_scanner(key="lector_qr")
+                        if codigo_detectado:
+                            st.success(f"Código detectado: {codigo_detectado}")
+                            producto_codigo = obtener_producto_por_codigo(codigo_detectado)
                             agregar_producto_al_carrito(producto_codigo, cantidad_codigo)
-                    elif foto_qr_subida is not None:
-                        st.error("No pude leer el QR.")
+                else:
+                    st.warning("El lector QR en vivo no está instalado. La opción de tomar/subir foto sí funciona sin ese componente.")
 
             else:
                 opciones = {f"{p[1]} | {p[2]} | Stock: {p[14]} | {formato_moneda(p[12])}": p[0] for p in productos_disponibles}
