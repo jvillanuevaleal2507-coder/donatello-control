@@ -320,6 +320,35 @@ def eliminar_producto(producto_id):
     conn.commit()
 
 
+def actualizar_imagen_producto(producto_id, imagen_local=None, imagen_url=None):
+    producto = obtener_producto_por_id(producto_id)
+
+    # Si se sube o toma una nueva imagen local, elimina la anterior para no acumular archivos basura
+    if imagen_local and producto and producto[16] and Path(producto[16]).exists():
+        try:
+            Path(producto[16]).unlink()
+        except Exception:
+            pass
+
+    if imagen_local is not None and imagen_url is not None:
+        c.execute(
+            "UPDATE productos SET imagen_local=?, imagen_url=? WHERE id=?",
+            (imagen_local, imagen_url, producto_id)
+        )
+    elif imagen_local is not None:
+        c.execute(
+            "UPDATE productos SET imagen_local=? WHERE id=?",
+            (imagen_local, producto_id)
+        )
+    elif imagen_url is not None:
+        c.execute(
+            "UPDATE productos SET imagen_url=? WHERE id=?",
+            (imagen_url, producto_id)
+        )
+
+    conn.commit()
+
+
 def limpiar_formulario_producto():
     keys = [
         "nombre_producto", "categoria_producto", "proveedor_producto",
@@ -666,6 +695,43 @@ elif menu == "Inventario visual":
                         if st.button("Eliminar producto", key=f"eliminar_{p[0]}"):
                             st.session_state[confirmar_key] = True
                             st.rerun()
+
+                    editar_img_key = f"editar_imagen_{p[0]}"
+                    if st.button("Agregar / cambiar imagen", key=f"btn_img_{p[0]}"):
+                        st.session_state[editar_img_key] = not st.session_state.get(editar_img_key, False)
+                        st.rerun()
+
+                    if st.session_state.get(editar_img_key, False):
+                        st.divider()
+                        st.write("**Actualizar imagen**")
+                        st.caption("Prioridad al guardar: foto cámara > imagen subida > URL")
+
+                        nueva_foto = st.camera_input("Tomar foto", key=f"nueva_foto_{p[0]}")
+                        nueva_imagen = st.file_uploader("Subir imagen", type=["jpg", "jpeg", "png", "webp"], key=f"nueva_img_{p[0]}")
+                        nueva_url = st.text_input("URL imagen", value=p[17] or "", key=f"nueva_url_{p[0]}")
+
+                        col_guardar_img, col_cancelar_img = st.columns(2)
+                        with col_guardar_img:
+                            if st.button("Guardar imagen", key=f"guardar_img_{p[0]}"):
+                                imagen_local_nueva = None
+                                if nueva_foto is not None:
+                                    imagen_local_nueva = guardar_imagen(nueva_foto, "camara")
+                                elif nueva_imagen is not None:
+                                    imagen_local_nueva = guardar_imagen(nueva_imagen, "upload")
+
+                                if imagen_local_nueva:
+                                    actualizar_imagen_producto(p[0], imagen_local=imagen_local_nueva, imagen_url=nueva_url.strip())
+                                else:
+                                    actualizar_imagen_producto(p[0], imagen_url=nueva_url.strip())
+
+                                st.success("Imagen actualizada correctamente.")
+                                st.session_state[editar_img_key] = False
+                                st.rerun()
+
+                        with col_cancelar_img:
+                            if st.button("Cancelar imagen", key=f"cancelar_img_{p[0]}"):
+                                st.session_state[editar_img_key] = False
+                                st.rerun()
 
 # =========================
 # IMPORTAR CSV
