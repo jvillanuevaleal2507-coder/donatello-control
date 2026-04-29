@@ -625,48 +625,121 @@ st.markdown(
 
         @media (max-width: 768px) {
             .block-container {
-                padding-left: 0.45rem;
-                padding-right: 0.45rem;
-                padding-top: 1rem;
+                padding-left: 0.45rem !important;
+                padding-right: 0.45rem !important;
+                padding-top: 0.7rem !important;
             }
 
             .donatello-shell {
-                padding: 12px;
-                border-radius: 18px;
-                margin-top: 4px;
-                margin-bottom: 8px;
-                min-height: 76px;
-                gap: 10px;
+                padding: 9px !important;
+                border-radius: 16px !important;
+                margin-top: 2px !important;
+                margin-bottom: 8px !important;
+                min-height: 58px !important;
+                gap: 8px !important;
             }
 
             .donatello-logo-box {
-                width: 52px;
-                min-width: 52px;
-                height: 52px;
-                border-radius: 15px;
+                width: 42px !important;
+                min-width: 42px !important;
+                height: 42px !important;
+                border-radius: 12px !important;
+                font-size: 1.4rem !important;
             }
 
             .donatello-title {
-                font-size: 1.15rem;
+                font-size: 0.92rem !important;
+                line-height: 1.05 !important;
             }
 
             .donatello-subtitle {
-                font-size: 0.75rem;
+                font-size: 0.62rem !important;
+                line-height: 1.1 !important;
+            }
+
+            h1 {
+                font-size: 1.45rem !important;
+                margin-top: 0.6rem !important;
+                margin-bottom: 0.65rem !important;
+            }
+
+            h2, h3 {
+                font-size: 1.1rem !important;
+            }
+
+            div[data-testid="stHorizontalBlock"] {
+                gap: 0.4rem !important;
             }
 
             div[data-testid="column"] {
                 width: 100% !important;
                 flex: 1 1 100% !important;
+                min-width: 0 !important;
+            }
+
+            div[data-testid="stMetric"] {
+                padding: 0.45rem !important;
+                border-radius: 14px !important;
+            }
+
+            div[data-testid="stMetric"] label {
+                font-size: 0.72rem !important;
+            }
+
+            div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+                font-size: 1.25rem !important;
+            }
+
+            .quick-card {
+                padding: 9px !important;
+                border-radius: 14px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .quick-title {
+                font-size: 0.88rem !important;
+            }
+
+            .quick-muted {
+                font-size: 0.72rem !important;
             }
 
             .stButton > button {
                 width: 100% !important;
-                min-height: 44px !important;
-                font-size: 0.95rem !important;
+                min-height: 38px !important;
+                font-size: 0.82rem !important;
+                padding: 0.45rem 0.55rem !important;
+                border-radius: 13px !important;
             }
 
-            div[data-testid="stMetric"] {
-                padding: 0.55rem !important;
+            div[role="radiogroup"] {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+            }
+
+            div[role="radiogroup"] label {
+                margin: 0 !important;
+                padding: 5px 8px !important;
+                border-radius: 13px !important;
+                min-height: 34px !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            div[role="radiogroup"] label p,
+            div[role="radiogroup"] label span {
+                font-size: 0.75rem !important;
+                font-weight: 800 !important;
+            }
+
+            input, textarea {
+                min-height: 38px !important;
+                font-size: 0.82rem !important;
+            }
+
+            .stAlert {
+                font-size: 0.75rem !important;
             }
         }
     </style>
@@ -1222,17 +1295,15 @@ elif menu == "Registrar venta":
                             st.rerun()
 
             elif modo_qr == "Cámara":
-                st.info("Si la cámara directa abre la frontal, usa la opción de subir/tomar foto. En celular normalmente te deja usar la cámara trasera.")
+                st.info("Toma una foto del QR con la cámara trasera o sube una imagen del QR.")
 
-                foto_qr = st.camera_input("Cámara directa", key="foto_qr_venta")
                 foto_qr_subida = st.file_uploader(
-                    "Subir o tomar foto del QR con cámara trasera",
+                    "Tomar/Subir foto del QR",
                     type=["jpg", "jpeg", "png", "webp"],
                     key="foto_qr_subida_venta"
                 )
 
-                archivo_qr = foto_qr_subida if foto_qr_subida is not None else foto_qr
-                codigo_detectado = leer_qr_desde_imagen(archivo_qr)
+                codigo_detectado = leer_qr_desde_imagen(foto_qr_subida)
 
                 col_cam1, col_cam2 = st.columns([1, 1])
                 with col_cam1:
