@@ -478,7 +478,7 @@ st.markdown(
         }
 
         .block-container {
-            padding-top: 1rem;
+            padding-top: 2.7rem;
             padding-left: 0.8rem;
             padding-right: 0.8rem;
             max-width: 1180px;
@@ -529,22 +529,23 @@ st.markdown(
 
         .donatello-shell {
             background: linear-gradient(135deg, #251f17 0%, #5a3a16 52%, #f7b733 100%);
-            padding: 12px 16px;
+            padding: 18px 18px;
             border-radius: 22px;
-            margin-bottom: 12px;
+            margin-top: 8px;
+            margin-bottom: 14px;
             color: white;
             box-shadow: 0 8px 24px rgba(0,0,0,0.14);
             display: flex;
             align-items: center;
             gap: 14px;
-            min-height: 82px;
+            min-height: 96px;
             overflow: visible;
         }
 
         .donatello-logo-box {
-            width: 62px;
-            min-width: 62px;
-            height: 62px;
+            width: 64px;
+            min-width: 64px;
+            height: 64px;
             border-radius: 18px;
             background: rgba(255,255,255,0.16);
             display: flex;
@@ -552,6 +553,7 @@ st.markdown(
             justify-content: center;
             overflow: hidden;
             font-size: 2rem;
+            line-height: 1;
         }
 
         .donatello-logo-box img {
@@ -625,14 +627,15 @@ st.markdown(
             .block-container {
                 padding-left: 0.45rem;
                 padding-right: 0.45rem;
-                padding-top: 0.45rem;
+                padding-top: 1rem;
             }
 
             .donatello-shell {
-                padding: 10px;
+                padding: 12px;
                 border-radius: 18px;
+                margin-top: 4px;
                 margin-bottom: 8px;
-                min-height: 70px;
+                min-height: 76px;
                 gap: 10px;
             }
 
@@ -1219,9 +1222,17 @@ elif menu == "Registrar venta":
                             st.rerun()
 
             elif modo_qr == "Cámara":
-                st.info("Toma foto del QR. Procura buena luz y que el QR ocupe buena parte de la imagen.")
-                foto_qr = st.camera_input("Escanear QR", key="foto_qr_venta")
-                codigo_detectado = leer_qr_desde_imagen(foto_qr)
+                st.info("Si la cámara directa abre la frontal, usa la opción de subir/tomar foto. En celular normalmente te deja usar la cámara trasera.")
+
+                foto_qr = st.camera_input("Cámara directa", key="foto_qr_venta")
+                foto_qr_subida = st.file_uploader(
+                    "Subir o tomar foto del QR con cámara trasera",
+                    type=["jpg", "jpeg", "png", "webp"],
+                    key="foto_qr_subida_venta"
+                )
+
+                archivo_qr = foto_qr_subida if foto_qr_subida is not None else foto_qr
+                codigo_detectado = leer_qr_desde_imagen(archivo_qr)
 
                 col_cam1, col_cam2 = st.columns([1, 1])
                 with col_cam1:
