@@ -29,6 +29,15 @@ BASE_DIR = Path(__file__).parent
 IMG_DIR = BASE_DIR / "imagenes_productos"
 IMG_DIR.mkdir(exist_ok=True)
 
+ASSETS_DIR = BASE_DIR / "assets"
+ASSETS_DIR.mkdir(exist_ok=True)
+LOGO_PATHS = [
+    ASSETS_DIR / "logo_donatello.png",
+    ASSETS_DIR / "logo_donatello.jpg",
+    BASE_DIR / "logo_donatello.png",
+    BASE_DIR / "logo_donatello.jpg"
+]
+
 # =========================
 # DATABASE SETUP
 # =========================
@@ -451,13 +460,124 @@ def formato_moneda(valor):
 # UI
 # =========================
 
-st.title("📦 Donatello Control Center V2")
-st.caption("Inventario visual con imagen, costo real, margen y ventas básicas")
-
-menu = st.sidebar.selectbox(
-    "Menú",
-    ["Agregar producto", "Inventario visual", "Importar CSV", "Etiquetas QR", "Ajustar inventario", "Registrar venta", "Dashboard"]
+st.markdown(
+    """
+    <style>
+        .block-container {
+            padding-top: 1rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            max-width: 1200px;
+        }
+        div[data-testid="stMetric"] {
+            background: #ffffff;
+            border: 1px solid #eeeeee;
+            padding: 0.8rem;
+            border-radius: 18px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+        }
+        .stButton > button {
+            border-radius: 16px;
+            padding: 0.65rem 1rem;
+            font-weight: 700;
+            border: 1px solid #f0c15a;
+        }
+        .stButton > button[kind="primary"] {
+            background: linear-gradient(135deg, #f7b733 0%, #fc4a1a 100%);
+            color: white;
+            border: none;
+        }
+        div[data-testid="stContainer"] {
+            border-radius: 18px;
+        }
+        .donatello-header {
+            background: linear-gradient(135deg, #1f1f1f 0%, #3a2a14 55%, #f7b733 100%);
+            padding: 18px;
+            border-radius: 24px;
+            margin-bottom: 16px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .donatello-title {
+            font-size: 1.55rem;
+            font-weight: 800;
+            margin: 0;
+        }
+        .donatello-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        @media (max-width: 768px) {
+            .block-container {
+                padding-left: 0.55rem;
+                padding-right: 0.55rem;
+                padding-top: 0.55rem;
+            }
+            .donatello-header {
+                padding: 14px;
+                border-radius: 18px;
+            }
+            .donatello-title {
+                font-size: 1.25rem;
+            }
+            .donatello-subtitle {
+                font-size: 0.8rem;
+            }
+            div[data-testid="column"] {
+                width: 100% !important;
+                flex: 1 1 100% !important;
+            }
+            .stButton > button {
+                width: 100%;
+                min-height: 46px;
+            }
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
+
+logo_encontrado = None
+for logo_path in LOGO_PATHS:
+    if logo_path.exists():
+        logo_encontrado = logo_path
+        break
+
+header_col1, header_col2 = st.columns([1, 5])
+with header_col1:
+    if logo_encontrado:
+        st.image(str(logo_encontrado), use_container_width=True)
+    else:
+        st.markdown("<div class='donatello-header' style='text-align:center; font-size:2rem;'>🛒</div>", unsafe_allow_html=True)
+with header_col2:
+    st.markdown(
+        """
+        <div class="donatello-header">
+            <p class="donatello-title">Ventas Donatello</p>
+            <div class="donatello-subtitle">Inventario, ventas, QR y control de utilidad</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+menu = st.radio(
+    "Navegación",
+    ["Venta", "Inventario", "Agregar", "QR", "Stock", "Dashboard", "Importar"],
+    horizontal=True,
+    label_visibility="collapsed"
+)
+
+menu_map = {
+    "Venta": "Registrar venta",
+    "Inventario": "Inventario visual",
+    "Agregar": "Agregar producto",
+    "QR": "Etiquetas QR",
+    "Stock": "Ajustar inventario",
+    "Dashboard": "Dashboard",
+    "Importar": "Importar CSV"
+}
+menu = menu_map[menu]
 
 # =========================
 # AGREGAR PRODUCTO
