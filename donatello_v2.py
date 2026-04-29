@@ -17,9 +17,10 @@ import pandas as pd
 # =========================================================
 
 st.set_page_config(
-    page_title="Donatello Control Center V2",
-    page_icon="📦",
-    layout="wide"
+    page_title="Ventas Donatello POS",
+    page_icon="🛒",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 # =========================
@@ -463,27 +464,45 @@ def formato_moneda(valor):
 st.markdown(
     """
     <style>
+        :root {
+            --don-orange: #fc4a1a;
+            --don-gold: #f7b733;
+            --don-dark: #1f1f1f;
+            --don-green: #6b8e23;
+            --don-cream: #fff7e8;
+        }
+        html, body, [class*="css"] {
+            background-color: var(--don-cream);
+        }
         .block-container {
-            padding-top: 1rem;
-            padding-left: 1rem;
-            padding-right: 1rem;
-            max-width: 1200px;
+            padding-top: 0.7rem;
+            padding-left: 0.8rem;
+            padding-right: 0.8rem;
+            max-width: 1180px;
+        }
+        h1, h2, h3 {
+            letter-spacing: -0.02em;
         }
         div[data-testid="stMetric"] {
             background: #ffffff;
-            border: 1px solid #eeeeee;
-            padding: 0.8rem;
-            border-radius: 18px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+            border: 1px solid #f1e3c5;
+            padding: 0.65rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 14px rgba(60,35,10,0.06);
         }
         .stButton > button {
             border-radius: 16px;
-            padding: 0.65rem 1rem;
-            font-weight: 700;
-            border: 1px solid #f0c15a;
+            padding: 0.62rem 0.9rem;
+            font-weight: 800;
+            border: 1px solid #efc46a;
+            background: #fffdf8;
+        }
+        .stButton > button:hover {
+            border-color: var(--don-orange);
+            color: var(--don-orange);
         }
         .stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #f7b733 0%, #fc4a1a 100%);
+            background: linear-gradient(135deg, var(--don-gold) 0%, var(--don-orange) 100%);
             color: white;
             border: none;
         }
@@ -491,38 +510,67 @@ st.markdown(
             border-radius: 18px;
         }
         .donatello-header {
-            background: linear-gradient(135deg, #1f1f1f 0%, #3a2a14 55%, #f7b733 100%);
-            padding: 18px;
-            border-radius: 24px;
-            margin-bottom: 16px;
+            background: linear-gradient(135deg, #251f17 0%, #5a3a16 50%, #f7b733 100%);
+            padding: 14px 16px;
+            border-radius: 22px;
+            margin-bottom: 10px;
             color: white;
             box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
         .donatello-title {
-            font-size: 1.55rem;
-            font-weight: 800;
+            font-size: 1.35rem;
+            font-weight: 900;
             margin: 0;
+            line-height: 1.05;
         }
         .donatello-subtitle {
-            font-size: 0.9rem;
-            opacity: 0.9;
+            font-size: 0.82rem;
+            opacity: 0.92;
             margin-top: 4px;
+        }
+        .quick-card {
+            background: #ffffff;
+            border: 1px solid #f0dfbc;
+            border-radius: 18px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 14px rgba(60,35,10,0.05);
+        }
+        .quick-title {
+            font-weight: 900;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+        }
+        .quick-muted {
+            color: #6d604d;
+            font-size: 0.85rem;
+        }
+        div[role="radiogroup"] label {
+            background: #fffdf8;
+            border: 1px solid #ead6ad;
+            padding: 6px 10px;
+            border-radius: 14px;
+            margin-right: 4px;
+        }
+        input, textarea {
+            border-radius: 14px !important;
         }
         @media (max-width: 768px) {
             .block-container {
-                padding-left: 0.55rem;
-                padding-right: 0.55rem;
-                padding-top: 0.55rem;
+                padding-left: 0.45rem;
+                padding-right: 0.45rem;
+                padding-top: 0.45rem;
             }
             .donatello-header {
-                padding: 14px;
+                padding: 12px;
                 border-radius: 18px;
+                margin-bottom: 6px;
             }
             .donatello-title {
-                font-size: 1.25rem;
+                font-size: 1.15rem;
             }
             .donatello-subtitle {
-                font-size: 0.8rem;
+                font-size: 0.75rem;
             }
             div[data-testid="column"] {
                 width: 100% !important;
@@ -530,7 +578,11 @@ st.markdown(
             }
             .stButton > button {
                 width: 100%;
-                min-height: 46px;
+                min-height: 44px;
+                font-size: 0.95rem;
+            }
+            div[data-testid="stMetric"] {
+                padding: 0.55rem;
             }
         }
     </style>
@@ -563,19 +615,19 @@ with header_col2:
 
 menu = st.radio(
     "Navegación",
-    ["Venta", "Inventario", "Agregar", "QR", "Stock", "Dashboard", "Importar"],
+    ["🚀 Venta rápida", "📦 Inventario", "➕ Agregar", "🏷️ QR", "🔁 Stock", "📊 Dashboard", "⬆️ Importar"],
     horizontal=True,
     label_visibility="collapsed"
 )
 
 menu_map = {
-    "Venta": "Registrar venta",
-    "Inventario": "Inventario visual",
-    "Agregar": "Agregar producto",
-    "QR": "Etiquetas QR",
-    "Stock": "Ajustar inventario",
-    "Dashboard": "Dashboard",
-    "Importar": "Importar CSV"
+    "🚀 Venta rápida": "Registrar venta",
+    "📦 Inventario": "Inventario visual",
+    "➕ Agregar": "Agregar producto",
+    "🏷️ QR": "Etiquetas QR",
+    "🔁 Stock": "Ajustar inventario",
+    "📊 Dashboard": "Dashboard",
+    "⬆️ Importar": "Importar CSV"
 }
 menu = menu_map[menu]
 
@@ -994,8 +1046,7 @@ elif menu == "Ajustar inventario":
 # =========================
 
 elif menu == "Registrar venta":
-    st.header("Registrar venta")
-    st.caption("Agrega productos al carrito y confirma la venta completa al final.")
+    st.header("🚀 Venta rápida")
 
     if "carrito" not in st.session_state:
         st.session_state.carrito = []
@@ -1010,51 +1061,41 @@ elif menu == "Registrar venta":
         if not productos_disponibles:
             st.error("No hay productos con stock disponible.")
         else:
-            st.subheader("Agregar producto al carrito")
+            total_carrito = sum(item["total"] for item in st.session_state.carrito)
+            utilidad_carrito = sum(item["utilidad"] for item in st.session_state.carrito)
+            piezas_carrito = sum(item["cantidad"] for item in st.session_state.carrito)
 
-            st.markdown("**Escanear o ingresar código QR**")
+            k1, k2, k3 = st.columns(3)
+            k1.metric("Total", formato_moneda(total_carrito))
+            k2.metric("Piezas", piezas_carrito)
+            k3.metric("Utilidad", formato_moneda(utilidad_carrito))
+
+            st.markdown("<div class='quick-card'><div class='quick-title'>Escanear / capturar producto</div><div class='quick-muted'>Escanea el QR, escribe el código o selecciona manualmente.</div></div>", unsafe_allow_html=True)
 
             modo_qr = st.radio(
-                "Método de captura",
-                ["Escribir / lector externo", "Cámara del celular"],
-                horizontal=True
+                "Método",
+                ["Código / lector", "Cámara", "Manual"],
+                horizontal=True,
+                label_visibility="collapsed"
             )
 
-            codigo_final = ""
+            producto_codigo = None
+            cantidad_codigo = 1
 
-            if modo_qr == "Escribir / lector externo":
-                codigo_final = st.text_input(
-                    "Código del producto",
-                    placeholder="Ej. DON-000001",
-                    key="codigo_escaneado_venta"
-                )
-            else:
-                st.info("Abre esta app desde tu celular, toma foto del QR y el sistema intentará leerlo.")
-                foto_qr = st.camera_input(
-                    "Escanear QR con cámara",
-                    key="foto_qr_venta"
-                )
-                codigo_detectado = leer_qr_desde_imagen(foto_qr)
+            if modo_qr == "Código / lector":
+                col_scan1, col_scan2 = st.columns([2, 1])
+                with col_scan1:
+                    codigo_final = st.text_input(
+                        "Código",
+                        placeholder="Escanea o escribe DON-000001",
+                        key="codigo_escaneado_venta"
+                    )
+                with col_scan2:
+                    cantidad_codigo = st.number_input("Cantidad", min_value=1, step=1, value=1, key="cantidad_codigo_venta")
 
-                if codigo_detectado:
-                    st.success(f"Código detectado: {codigo_detectado}")
-                    codigo_final = codigo_detectado
-                elif foto_qr is not None:
-                    st.error("No pude leer el QR. Intenta con mejor luz, más cerca y sin reflejos.")
+                producto_codigo = obtener_producto_por_codigo(codigo_final) if codigo_final.strip() else None
 
-            col_codigo1, col_codigo2 = st.columns([1, 3])
-            with col_codigo1:
-                cantidad_codigo = st.number_input(
-                    "Cantidad por código",
-                    min_value=1,
-                    step=1,
-                    value=1,
-                    key="cantidad_codigo_venta"
-                )
-            with col_codigo2:
-                if st.button("Agregar por código / QR"):
-                    producto_codigo = obtener_producto_por_codigo(codigo_final)
-
+                if st.button("Agregar al carrito", type="primary", key="btn_agregar_codigo"):
                     if not codigo_final.strip():
                         st.error("Primero captura o escanea un código.")
                     elif not producto_codigo:
@@ -1069,7 +1110,6 @@ elif menu == "Registrar venta":
                                 break
 
                         cantidad_en_carrito = producto_existente["cantidad"] if producto_existente else 0
-
                         if cantidad_en_carrito + cantidad_codigo > producto_codigo[14]:
                             st.error("No puedes agregar más piezas que el stock disponible.")
                         else:
@@ -1093,40 +1133,79 @@ elif menu == "Registrar venta":
                                 del st.session_state["codigo_escaneado_venta"]
                             st.rerun()
 
-            st.divider()
-            st.markdown("**O seleccionar manualmente**")
+            elif modo_qr == "Cámara":
+                st.info("Toma foto del QR. Procura buena luz y que el QR ocupe buena parte de la imagen.")
+                foto_qr = st.camera_input("Escanear QR", key="foto_qr_venta")
+                codigo_detectado = leer_qr_desde_imagen(foto_qr)
 
-            opciones = {f"{p[1]} | {p[2]} | Stock: {p[14]} | Precio: {formato_moneda(p[12])}": p[0] for p in productos_disponibles}
-            seleccion = st.selectbox("Producto", list(opciones.keys()))
-            producto_id = opciones[seleccion]
-            producto = obtener_producto_por_id(producto_id)
+                col_cam1, col_cam2 = st.columns([1, 1])
+                with col_cam1:
+                    cantidad_codigo = st.number_input("Cantidad", min_value=1, step=1, value=1, key="cantidad_codigo_camara")
+                with col_cam2:
+                    if codigo_detectado:
+                        st.success(f"Detectado: {codigo_detectado}")
+                    elif foto_qr is not None:
+                        st.error("No pude leer el QR.")
 
-            col1, col2 = st.columns([1, 2])
-            with col1:
-                imagen = obtener_imagen_preferida(producto)
-                if imagen:
-                    st.image(imagen, use_container_width=True)
-                else:
-                    st.write("Sin imagen")
-            with col2:
-                st.write(f"**Producto:** {producto[2]}")
-                st.write(f"**Código:** {producto[1]}")
-                st.write(f"**Precio:** {formato_moneda(producto[12])}")
-                st.write(f"**Costo real:** {formato_moneda(producto[11])}")
-                st.write(f"**Margen:** {producto[13]:.2f}%")
-                st.write(f"**Stock disponible:** {producto[14]}")
+                if st.button("Agregar QR detectado", type="primary", disabled=not bool(codigo_detectado), key="btn_agregar_camara"):
+                    producto_codigo = obtener_producto_por_codigo(codigo_detectado)
+                    if not producto_codigo:
+                        st.error("No encontré un producto con ese código.")
+                    elif producto_codigo[14] <= 0:
+                        st.error("Ese producto no tiene stock disponible.")
+                    else:
+                        producto_existente = None
+                        for item in st.session_state.carrito:
+                            if item["producto_id"] == producto_codigo[0]:
+                                producto_existente = item
+                                break
+                        cantidad_en_carrito = producto_existente["cantidad"] if producto_existente else 0
+                        if cantidad_en_carrito + cantidad_codigo > producto_codigo[14]:
+                            st.error("No puedes agregar más piezas que el stock disponible.")
+                        else:
+                            if producto_existente:
+                                producto_existente["cantidad"] += cantidad_codigo
+                                producto_existente["total"] = producto_existente["cantidad"] * producto_existente["precio_unitario"]
+                                producto_existente["utilidad"] = (producto_existente["precio_unitario"] - producto_existente["costo_unitario"]) * producto_existente["cantidad"]
+                            else:
+                                st.session_state.carrito.append({
+                                    "producto_id": producto_codigo[0],
+                                    "nombre": producto_codigo[2],
+                                    "codigo": producto_codigo[1],
+                                    "cantidad": cantidad_codigo,
+                                    "precio_unitario": producto_codigo[12],
+                                    "costo_unitario": producto_codigo[11],
+                                    "total": producto_codigo[12] * cantidad_codigo,
+                                    "utilidad": (producto_codigo[12] - producto_codigo[11]) * cantidad_codigo
+                                })
+                            st.success(f"Agregado: {producto_codigo[2]}")
+                            st.rerun()
 
-                cantidad = st.number_input("Cantidad", min_value=1, max_value=producto[14], step=1)
+            else:
+                opciones = {f"{p[1]} | {p[2]} | Stock: {p[14]} | {formato_moneda(p[12])}": p[0] for p in productos_disponibles}
+                seleccion = st.selectbox("Producto", list(opciones.keys()))
+                producto_id = opciones[seleccion]
+                producto = obtener_producto_por_id(producto_id)
 
-                if st.button("Agregar al carrito"):
+                col_m1, col_m2 = st.columns([1, 2])
+                with col_m1:
+                    imagen = obtener_imagen_preferida(producto)
+                    if imagen:
+                        st.image(imagen, use_container_width=True)
+                with col_m2:
+                    st.write(f"**{producto[2]}**")
+                    st.caption(producto[1])
+                    st.write(f"Precio: {formato_moneda(producto[12])}")
+                    st.write(f"Stock: {producto[14]}")
+                    cantidad = st.number_input("Cantidad", min_value=1, max_value=producto[14], step=1, key="cantidad_manual_venta")
+
+                if st.button("Agregar producto", type="primary", key="btn_agregar_manual"):
                     producto_existente = None
                     for item in st.session_state.carrito:
                         if item["producto_id"] == producto_id:
                             producto_existente = item
                             break
-
                     cantidad_en_carrito = producto_existente["cantidad"] if producto_existente else 0
-
                     if cantidad_en_carrito + cantidad > producto[14]:
                         st.error("No puedes agregar más piezas que el stock disponible.")
                     else:
@@ -1145,86 +1224,57 @@ elif menu == "Registrar venta":
                                 "total": producto[12] * cantidad,
                                 "utilidad": (producto[12] - producto[11]) * cantidad
                             })
-                        st.success("Producto agregado al carrito.")
+                        st.success("Producto agregado.")
                         st.rerun()
 
             st.divider()
-            st.subheader("Carrito de venta")
+            st.subheader("Carrito")
 
             if not st.session_state.carrito:
-                st.info("Todavía no hay productos en el carrito.")
+                st.info("Carrito vacío.")
             else:
-                total_carrito = sum(item["total"] for item in st.session_state.carrito)
-                utilidad_carrito = sum(item["utilidad"] for item in st.session_state.carrito)
-
                 for idx, item in enumerate(st.session_state.carrito):
                     with st.container(border=True):
-                        c1, c2, c3, c4, c5 = st.columns([3, 1, 1, 1, 1])
+                        c1, c2, c3 = st.columns([3, 1, 1])
                         c1.write(f"**{item['nombre']}**")
                         c1.caption(item.get("codigo", ""))
-                        c2.write(f"Cant: {item['cantidad']}")
-                        c3.write(formato_moneda(item["precio_unitario"]))
-                        c4.write(f"Total: {formato_moneda(item['total'])}")
-                        if c5.button("Quitar", key=f"quitar_{idx}"):
+                        c2.write(f"x{item['cantidad']}")
+                        c2.caption(formato_moneda(item["precio_unitario"]))
+                        c3.write(f"**{formato_moneda(item['total'])}**")
+                        if c3.button("Quitar", key=f"quitar_{idx}"):
                             st.session_state.carrito.pop(idx)
                             st.rerun()
 
-                col_total1, col_total2, col_total3 = st.columns(3)
-                col_total1.metric("Total venta", formato_moneda(total_carrito))
-                col_total2.metric("Utilidad estimada", formato_moneda(utilidad_carrito))
-                col_total3.metric("Productos en carrito", len(st.session_state.carrito))
+                total_carrito = sum(item["total"] for item in st.session_state.carrito)
+                utilidad_carrito = sum(item["utilidad"] for item in st.session_state.carrito)
 
                 st.divider()
-                st.subheader("Pago del cliente")
-
-                pago_col1, pago_col2, pago_col3 = st.columns(3)
-                with pago_col1:
-                    monto_recibido = st.number_input(
-                        "Monto recibido",
-                        min_value=0.0,
-                        step=1.0,
-                        value=0.0,
-                        key="monto_recibido_venta"
-                    )
-
+                st.subheader("Cobro")
+                pago1, pago2 = st.columns(2)
+                with pago1:
+                    monto_recibido = st.number_input("Recibido", min_value=0.0, step=1.0, value=0.0, key="monto_recibido_venta")
                 cambio = monto_recibido - total_carrito
                 falta = total_carrito - monto_recibido
-
-                with pago_col2:
+                with pago2:
                     if monto_recibido >= total_carrito:
-                        st.metric("Cambio a entregar", formato_moneda(cambio))
+                        st.metric("Cambio", formato_moneda(cambio))
                     else:
-                        st.metric("Falta por pagar", formato_moneda(falta))
+                        st.metric("Falta", formato_moneda(falta))
 
-                with pago_col3:
-                    if monto_recibido == 0:
-                        st.warning("Ingresa el monto recibido.")
-                    elif monto_recibido < total_carrito:
-                        st.error("El pago es insuficiente.")
-                    else:
-                        st.success("Pago suficiente.")
-
-                col_btn1, col_btn2 = st.columns(2)
-                with col_btn1:
-                    confirmar_deshabilitado = monto_recibido < total_carrito
-                    if st.button("Confirmar venta completa", type="primary", disabled=confirmar_deshabilitado):
+                b1, b2 = st.columns(2)
+                with b1:
+                    if st.button("✅ Cobrar venta", type="primary", disabled=monto_recibido < total_carrito):
                         success, result = registrar_venta_carrito(st.session_state.carrito)
                         if success:
-                            st.success(
-                                f"Venta registrada. Total: {formato_moneda(result['total'])} | "
-                                f"Recibido: {formato_moneda(monto_recibido)} | "
-                                f"Cambio: {formato_moneda(cambio)} | "
-                                f"Utilidad estimada: {formato_moneda(result['utilidad'])}"
-                            )
+                            st.success(f"Venta registrada: {formato_moneda(result['total'])} | Cambio: {formato_moneda(cambio)}")
                             st.session_state.carrito = []
                             if "monto_recibido_venta" in st.session_state:
                                 del st.session_state["monto_recibido_venta"]
                             st.rerun()
                         else:
                             st.error(result)
-
-                with col_btn2:
-                    if st.button("Vaciar carrito"):
+                with b2:
+                    if st.button("🧹 Vaciar carrito"):
                         st.session_state.carrito = []
                         if "monto_recibido_venta" in st.session_state:
                             del st.session_state["monto_recibido_venta"]
