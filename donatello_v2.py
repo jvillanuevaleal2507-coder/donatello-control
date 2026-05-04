@@ -11,11 +11,8 @@ from PIL import Image
 import pandas as pd
 import base64
 
-try:
-    from streamlit_qrcode_scanner import qrcode_scanner
-    QR_SCANNER_AVAILABLE = True
-except Exception:
-    QR_SCANNER_AVAILABLE = False
+# V3 estable: se eliminó el lector QR en vivo experimental.
+# El flujo recomendado usa foto del QR + lectura con OpenCV.
 
 # =========================================================
 # VENTAS DONATELLO POS V3
@@ -1039,41 +1036,81 @@ elif menu == "Registrar venta":
                 st.markdown("### 📷 Tomar QR")
                 cantidad_codigo = st.number_input("Cantidad", min_value=1, step=1, value=1, key="cantidad_codigo_camara")
 
-                st.markdown("<div class='quick-card'><div class='quick-title'>Opción recomendada</div><div class='quick-muted'>Toca el botón, elige cámara trasera, toma la foto del QR y luego presiona Agregar QR detectado.</div></div>", unsafe_allow_html=True)
+                st.markdown(
+                    "<div class='quick-card'><div class='quick-title'>Paso 1: Tomar/Subir foto del QR</div>"
+                    "<div class='quick-muted'>Toca el botón de abajo, elige cámara trasera y toma la foto del QR.</div></div>",
+                    unsafe_allow_html=True
+                )
 
                 foto_qr_subida = st.file_uploader(
-                    "Tomar/Subir foto del QR",
+                    "📸 Tomar o subir foto del QR",
                     type=["jpg", "jpeg", "png", "webp"],
                     key="foto_qr_subida_venta"
                 )
 
-                codigo_detectado_respaldo = leer_qr_desde_imagen(foto_qr_subida)
+                if "codigo_qr_foto" not in st.session_state:
+                    st.session_state.codigo_qr_foto = ""
 
-                if codigo_detectado_respaldo:
-                    st.success(f"Código detectado: {codigo_detectado_respaldo}")
-                    producto_preview = obtener_producto_por_codigo(codigo_detectado_respaldo)
-                    if producto_preview:
-                        st.info(f"Producto: {producto_preview[2]} | Precio: {formato_moneda(producto_preview[12])} | Stock: {producto_preview[14]}")
-                    if st.button("Agregar QR detectado", type="primary", key="btn_agregar_foto_qr"):
-                        producto_codigo = obtener_producto_por_codigo(codigo_detectado_respaldo)
-                        agregar_producto_al_carrito(producto_codigo, cantidad_codigo)
-                elif foto_qr_subida is not None:
-                    st.error("No pude leer el QR. Intenta tomar la foto más cerca, con buena luz y sin reflejos.")
+                if "foto_qr_bytes" not in st.session_state:
+                    st.session_state.foto_qr_bytes = None
 
-                st.divider()
-                st.markdown("**Opción experimental: lector en vivo**")
-                st.caption("Si el recuadro aparece descentrado en tu celular, usa la opción recomendada de arriba.")
+                if foto_qr_subida is not None:
+                    st.session_state.foto_qr_bytes = foto_qr_subida.getvalue()
 
-                if QR_SCANNER_AVAILABLE:
-                    usar_scanner_en_vivo = st.toggle("Probar lector QR en vivo", value=False, key="toggle_scanner_vivo")
-                    if usar_scanner_en_vivo:
-                        codigo_detectado = qrcode_scanner(key="lector_qr")
-                        if codigo_detectado:
-                            st.success(f"Código detectado: {codigo_detectado}")
-                            producto_codigo = obtener_producto_por_codigo(codigo_detectado)
-                            agregar_producto_al_carrito(producto_codigo, cantidad_codigo)
+                if st.session_state.foto_qr_bytes is not None:
+                    st.image(BytesIO(st.session_state.foto_qr_bytes), caption="Foto cargada para lectura", use_container_width=True)
+
+                st.markdown(
+                    "<div class='quick-card'><div class='quick-title'>Paso 2: Leer QR de la foto</div>"
+                    "<div class='quick-muted'>Después de tomar la foto, presiona este botón para convertir el QR en código de producto.</div></div>",
+                    unsafe_allow_html=True
+                )
+
+                leer_disabled = st.session_state.foto_qr_bytes is None
+                if st.button("🔎 Leer QR de la foto", type="primary", key="btn_leer_qr_foto", disabled=leer_disabled):
+                    codigo_detectado_respaldo = leer_qr_desde_imagen(BytesIO(st.session_state.foto_qr_bytes))
+                    if codigo_detectado_respaldo:
+                        st.session_state.codigo_qr_foto = codigo_detectado_respaldo
+                        st.success(f"Código detectado: {codigo_detectado_respaldo}")
+                    else:
+                        st.session_state.codigo_qr_foto = ""
+                        st.error("No pude leer el QR. Intenta tomar la foto más cerca, con buena luz, sin reflejos y que el QR ocupe buena parte de la imagen.")
+
+                if st.session_state.foto_qr_bytes is None:
+                    st.caption("Primero toma o sube una foto para activar la lectura del QR.")
                 else:
-                    st.warning("El lector QR en vivo no está instalado. La opción de tomar/subir foto sí funciona sin ese componente.")
+                    if st.button("🧹 Quitar foto cargada", key="btn_limpiar_foto_qr"):
+                        st.session_state.foto_qr_bytes = None
+                        st.session_state.codigo_qr_foto = ""
+                        st.rerun()
+
+                st.markdown(
+                    "<div class='quick-card'><div class='quick-title'>Paso 3: Agregar producto al carrito</div>"
+                    "<div class='quick-muted'>Si el sistema detectó el código, aparecerá aquí. También puedes escribirlo manualmente.</div></div>",
+                    unsafe_allow_html=True
+                )
+
+                codigo_para_agregar = st.text_input(
+                    "Código detectado o manual",
+                    value=st.session_state.codigo_qr_foto,
+                    placeholder="Ej. DON-000001",
+                    key="codigo_qr_foto_manual"
+                )
+
+                if codigo_para_agregar.strip():
+                    producto_preview = obtener_producto_por_codigo(codigo_para_agregar)
+                    if producto_preview:
+                        st.success(f"Producto encontrado: {producto_preview[2]}")
+                        st.info(f"Precio: {formato_moneda(producto_preview[12])} | Stock: {producto_preview[14]}")
+                    else:
+                        st.warning("Ese código todavía no coincide con ningún producto.")
+                else:
+                    st.caption("Aquí aparecerá el código después de leer la foto del QR.")
+
+                agregar_disabled = not bool(codigo_para_agregar.strip())
+                if st.button("➕ Agregar producto detectado al carrito", type="primary", key="btn_agregar_codigo_foto", disabled=agregar_disabled):
+                    producto_codigo = obtener_producto_por_codigo(codigo_para_agregar)
+                    agregar_producto_al_carrito(producto_codigo, cantidad_codigo)
 
             else:
                 opciones = {f"{p[1]} | {p[2]} | Stock: {p[14]} | {formato_moneda(p[12])}": p[0] for p in productos_disponibles}
