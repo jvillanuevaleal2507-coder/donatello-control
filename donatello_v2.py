@@ -1054,11 +1054,25 @@ elif menu == "Registrar venta":
                 if "foto_qr_bytes" not in st.session_state:
                     st.session_state.foto_qr_bytes = None
 
-                if foto_qr_subida is not None:
-                    st.session_state.foto_qr_bytes = foto_qr_subida.getvalue()
+                # Lectura robusta del archivo desde el widget o desde session_state
+                archivo_actual = foto_qr_subida
+                if archivo_actual is None:
+                    archivo_actual = st.session_state.get("foto_qr_subida_venta", None)
+
+                if archivo_actual is not None:
+                    try:
+                        st.session_state.foto_qr_bytes = archivo_actual.getvalue()
+                    except Exception:
+                        st.session_state.foto_qr_bytes = None
 
                 if st.session_state.foto_qr_bytes is not None:
-                    st.image(BytesIO(st.session_state.foto_qr_bytes), caption="Foto cargada para lectura", use_container_width=True)
+                    try:
+                        imagen_preview = Image.open(BytesIO(st.session_state.foto_qr_bytes)).convert("RGB")
+                        st.success(f"Foto recibida correctamente ({len(st.session_state.foto_qr_bytes) / 1024:.1f} KB)")
+                        st.image(imagen_preview, caption="Foto cargada para lectura", use_container_width=True)
+                    except Exception as e:
+                        st.error(f"La foto se recibió, pero no pude abrirla como imagen: {e}")
+                        st.session_state.foto_qr_bytes = None
 
                 st.markdown(
                     "<div class='quick-card'><div class='quick-title'>Paso 2: Leer QR de la foto</div>"
