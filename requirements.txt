@@ -4,4 +4,3 @@ opencv-python-headless
 numpy
 Pillow
 pandas
-streamlit_qrcode_scanner

@@ -1034,83 +1034,51 @@ elif menu == "Registrar venta":
 
             elif modo_qr == "Cámara":
                 st.markdown("### 📷 Tomar QR")
-                cantidad_codigo = st.number_input("Cantidad", min_value=1, step=1, value=1, key="cantidad_codigo_camara")
+                cantidad_codigo = st.number_input(
+                    "Cantidad",
+                    min_value=1,
+                    step=1,
+                    value=1,
+                    key="cantidad_codigo_camara_v4"
+                )
 
                 st.markdown(
-                    "<div class='quick-card'><div class='quick-title'>Paso 1: Tomar/Subir foto del QR</div>"
-                    "<div class='quick-muted'>Toca el botón de abajo, elige cámara trasera y toma la foto del QR.</div></div>",
+                    "<div class='quick-card'><div class='quick-title'>Modo V4: cámara directa</div>"
+                    "<div class='quick-muted'>Toma una foto clara del QR. El sistema intentará leerlo automáticamente y mostrar el producto.</div></div>",
                     unsafe_allow_html=True
                 )
 
-                foto_qr_subida = st.file_uploader(
-                    "📸 Tomar o subir foto del QR",
-                    type=["jpg", "jpeg", "png", "webp"],
-                    key="foto_qr_subida_venta"
+                if "codigo_qr_camara_v4" not in st.session_state:
+                    st.session_state.codigo_qr_camara_v4 = ""
+
+                foto_qr_camara = st.camera_input(
+                    "📷 Tomar foto del QR",
+                    key="foto_qr_camara_v4"
                 )
 
-                if "codigo_qr_foto" not in st.session_state:
-                    st.session_state.codigo_qr_foto = ""
-
-                if "foto_qr_bytes" not in st.session_state:
-                    st.session_state.foto_qr_bytes = None
-
-                # Lectura robusta del archivo desde el widget o desde session_state
-                archivo_actual = foto_qr_subida
-                if archivo_actual is None:
-                    archivo_actual = st.session_state.get("foto_qr_subida_venta", None)
-
-                if archivo_actual is not None:
+                if foto_qr_camara is not None:
                     try:
-                        st.session_state.foto_qr_bytes = archivo_actual.getvalue()
-                    except Exception:
-                        st.session_state.foto_qr_bytes = None
+                        foto_bytes = foto_qr_camara.getvalue()
+                        st.success(f"Foto recibida correctamente ({len(foto_bytes) / 1024:.1f} KB)")
+                        st.image(BytesIO(foto_bytes), caption="Foto QR capturada", use_container_width=True)
 
-                if st.session_state.foto_qr_bytes is not None:
-                    try:
-                        imagen_preview = Image.open(BytesIO(st.session_state.foto_qr_bytes)).convert("RGB")
-                        st.success(f"Foto recibida correctamente ({len(st.session_state.foto_qr_bytes) / 1024:.1f} KB)")
-                        st.image(imagen_preview, caption="Foto cargada para lectura", use_container_width=True)
+                        codigo_detectado = leer_qr_desde_imagen(BytesIO(foto_bytes))
+                        if codigo_detectado:
+                            st.session_state.codigo_qr_camara_v4 = codigo_detectado
+                            st.success(f"Código detectado: {codigo_detectado}")
+                        else:
+                            st.warning("Foto recibida, pero no pude leer el QR. Intenta acercarte más, mejorar la luz y evitar reflejos.")
                     except Exception as e:
-                        st.error(f"La foto se recibió, pero no pude abrirla como imagen: {e}")
-                        st.session_state.foto_qr_bytes = None
-
-                st.markdown(
-                    "<div class='quick-card'><div class='quick-title'>Paso 2: Leer QR de la foto</div>"
-                    "<div class='quick-muted'>Después de tomar la foto, presiona este botón para convertir el QR en código de producto.</div></div>",
-                    unsafe_allow_html=True
-                )
-
-                leer_disabled = st.session_state.foto_qr_bytes is None
-                if st.button("🔎 Leer QR de la foto", type="primary", key="btn_leer_qr_foto", disabled=leer_disabled):
-                    codigo_detectado_respaldo = leer_qr_desde_imagen(BytesIO(st.session_state.foto_qr_bytes))
-                    if codigo_detectado_respaldo:
-                        st.session_state.codigo_qr_foto = codigo_detectado_respaldo
-                        st.success(f"Código detectado: {codigo_detectado_respaldo}")
-                    else:
-                        st.session_state.codigo_qr_foto = ""
-                        st.error("No pude leer el QR. Intenta tomar la foto más cerca, con buena luz, sin reflejos y que el QR ocupe buena parte de la imagen.")
-
-                if st.session_state.foto_qr_bytes is None:
-                    st.caption("Primero toma o sube una foto para activar la lectura del QR.")
-                else:
-                    if st.button("🧹 Quitar foto cargada", key="btn_limpiar_foto_qr"):
-                        st.session_state.foto_qr_bytes = None
-                        st.session_state.codigo_qr_foto = ""
-                        st.rerun()
-
-                st.markdown(
-                    "<div class='quick-card'><div class='quick-title'>Paso 3: Agregar producto al carrito</div>"
-                    "<div class='quick-muted'>Si el sistema detectó el código, aparecerá aquí. También puedes escribirlo manualmente.</div></div>",
-                    unsafe_allow_html=True
-                )
+                        st.error(f"Recibí la foto, pero no pude procesarla: {e}")
 
                 codigo_para_agregar = st.text_input(
                     "Código detectado o manual",
-                    value=st.session_state.codigo_qr_foto,
+                    value=st.session_state.codigo_qr_camara_v4,
                     placeholder="Ej. DON-000001",
-                    key="codigo_qr_foto_manual"
+                    key="codigo_qr_camara_manual_v4"
                 )
 
+                producto_preview = None
                 if codigo_para_agregar.strip():
                     producto_preview = obtener_producto_por_codigo(codigo_para_agregar)
                     if producto_preview:
@@ -1119,12 +1087,21 @@ elif menu == "Registrar venta":
                     else:
                         st.warning("Ese código todavía no coincide con ningún producto.")
                 else:
-                    st.caption("Aquí aparecerá el código después de leer la foto del QR.")
+                    st.caption("Toma una foto del QR o escribe el código manualmente.")
 
                 agregar_disabled = not bool(codigo_para_agregar.strip())
-                if st.button("➕ Agregar producto detectado al carrito", type="primary", key="btn_agregar_codigo_foto", disabled=agregar_disabled):
+                if st.button(
+                    "➕ Agregar producto al carrito",
+                    type="primary",
+                    key="btn_agregar_qr_camara_v4",
+                    disabled=agregar_disabled
+                ):
                     producto_codigo = obtener_producto_por_codigo(codigo_para_agregar)
                     agregar_producto_al_carrito(producto_codigo, cantidad_codigo)
+
+                if st.button("🧹 Limpiar lectura QR", key="btn_limpiar_qr_camara_v4"):
+                    st.session_state.codigo_qr_camara_v4 = ""
+                    st.rerun()
 
             else:
                 opciones = {f"{p[1]} | {p[2]} | Stock: {p[14]} | {formato_moneda(p[12])}": p[0] for p in productos_disponibles}
